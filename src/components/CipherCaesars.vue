@@ -1,27 +1,91 @@
 <script setup lang="ts">
 import InputText from 'primevue/inputtext'
+import Button from 'primevue/button'
+import {ref} from "vue";
+import {caesarCipher, caesarDecipher} from "@/algoritms/cipher-caesars";
+
+const inputData = ref<{
+  shift: string,
+  str: string
+}>({
+  shift: '',
+  str: ''
+})
+
+const cipherText = ref<string>('')
+const deCipherText = ref<string>('')
+const isOpenResult = ref<boolean>(false)
+const isOpenResultDeCipher = ref<boolean>(false)
+const errorMessage = ref<string>('')
+
+const handlerClickCipherText = () => {
+
+  errorMessage.value = ''
+
+  if (!inputData.value.str || !inputData.value.shift)
+    errorMessage.value = 'Введите корректные данные!'
+
+  if (!errorMessage.value){
+    cipherText.value = caesarCipher(inputData.value.str, Number(inputData.value.shift))
+    isOpenResult.value = true
+    isOpenResultDeCipher.value = false
+  }
+}
+
+const handlerClickDeCipherText = () => {
+  deCipherText.value = caesarDecipher(cipherText.value, Number(inputData.value.shift))
+  if (deCipherText.value) isOpenResultDeCipher.value = true
+}
 </script>
 
 <template>
   <div class="caesars">
     <div class="caesars-input">
-      <div class="caesars-input__item">
-        <label for="shift">Введите сдвиг</label>
-        <InputText
-          id="shift"
-          placeholder="Сдвиг"
-        />
+      <div class="caesars-input__form">
+        <div class="caesars-input__item">
+          <label for="shift">Введите сдвиг</label>
+          <InputText
+              id="shift"
+              placeholder="Сдвиг"
+              v-model="inputData.shift"
+          />
+        </div>
+        <div class="caesars-input__item">
+          <label for="cipher-word">Введите шифруемый текст</label>
+          <InputText
+              id="cipher-word"
+              placeholder="Шифруемый текст"
+              v-model="inputData.str"
+          />
+        </div>
       </div>
-      <div class="caesars-input__item">
-        <label for="cipher-word">Введите шифруемое слово</label>
-        <InputText
-          id="cipher-word"
-          placeholder="Шифруемое слово"
-        />
+      <div class="caesars-input__error" v-if="errorMessage">
+        <span class="p-error">{{errorMessage}}</span>
+      </div>
+      <div class="caesars-input__button">
+        <Button label="Зашифровать текст" @click="handlerClickCipherText"/>
       </div>
     </div>
 
-    <div class="caesars-output"></div>
+    <Transition name="slide-fade" mode="out-in">
+      <div class="caesars-output" v-if="isOpenResult">
+        <div class="caesars-output__item">
+          <div class="caesars-output__text">
+            <span>Шифртекст: </span>
+            <span>{{ cipherText }}</span>
+          </div>
+          <Button label="Расшифровать текст" size="small" @click="handlerClickDeCipherText"/>
+        </div>
+        <Transition name="slide-fade" mode="out-in">
+          <div v-if="isOpenResultDeCipher" class="caesars-output__item">
+            <div class="caesars-output__text">
+              <span>Расшифрованный текст: </span>
+              <span>{{ deCipherText }}</span>
+            </div>
+          </div>
+        </Transition>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -38,13 +102,51 @@ import InputText from 'primevue/inputtext'
   background: rgba(218, 218, 218, 0.2);
 
   display: flex;
-  flex-direction: row;
-  column-gap: 10px;
+  flex-direction: column;
+  row-gap: 10px;
+  align-items: flex-end;
+
+  &__form {
+    display: flex;
+    flex-direction: row;
+    column-gap: 10px;
+  }
 
   &__item {
     display: flex;
     flex-direction: column;
     row-gap: 5px;
   }
+}
+
+.caesars-output {
+  border-radius: 6px;
+  padding: 10px;
+  background: rgba(218, 218, 218, 0.2);
+
+  display: flex;
+  flex-direction: column;
+  row-gap: 10px;
+
+  &__item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.slide-fade-enter-active {
+  transition: all 0.2s ease-out;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.4s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(20px);
+  opacity: 0;
 }
 </style>
